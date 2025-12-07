@@ -1,0 +1,75 @@
+import hashlib
+import os
+
+import requests
+import feedparser
+from dateutil import parser as dateparser
+
+# Deterministic id from url (or GUID)
+def make_id(entry):
+    guid = entry.get('id') or entry.get('guid') or entry.get('link')
+    return hashlib.sha256(guid.encode('utf-8')).hexdigest()
+
+class Crawler:
+    def __init__(self, url, path, sink):
+        self.path = path
+        self.url = url
+        self.sink = sink
+
+    def download_feed(self):
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        r = requests.get(self.url, headers=headers)
+        r.raise_for_status()
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        with open(self.path, "wb") as f:
+            f.write(r.content)
+
+    def _normalize_entry(self, entry):
+        published = dateparser.parse(entry.published)
+        title = entry.get('title')
+        url = entry.get('link')
+        author = entry.get('author')
+
+        tags = entry.get('tags')
+        summary = entry.get('summary')
+        content = entry.get('content')
+        id = make_id(entry)
+
+        art = {
+            'title': title,
+            'url': url,
+            'title': title,
+            'author': author,
+            'published': published,
+            'tags': tags,
+            'summary': summary,
+            'content': content,
+            'id': id,
+        }
+        return art
+
+    def extract(self, sink_watermark=None):
+        d = feedparser.parse(self.path)
+        for entry in d.entries:
+            try:
+                published = dateparser.parse(entry.published)
+                if published and sink_watermark and published < sink_watermark:
+                    continue
+                norm = self._normalize_entry(entry)
+                yield norm
+            except Exception as ee:
+                print('entry error', ee)
+
+    def ingest(self, arts):
+        for art in arts:
+            print(art)
+            ok = self.sink.upsert_article(art)
+
+    # Poll feeds incrementally
+    def poll_once(self):
+        self.download_feed()
+        last_published_time = self.sink.get_last_published_time()
+        arts = self.extract(last_published_time)
+        self.ingest(arts)
