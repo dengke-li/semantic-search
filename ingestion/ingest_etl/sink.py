@@ -4,7 +4,7 @@ from dateutil import parser as dateparser
 
 class Sink:
     """Abstract sink interface for articles."""
-    def get_last_published_time(self):
+    def get_feed_last_published_time(self, id):
         raise NotImplementedError
 
     def upsert_article(self, article: dict) -> bool:
@@ -13,17 +13,17 @@ class Sink:
 class DBSink(Sink):
     """Database sink. Lazy-imports psycopg so tests can avoid DB dependency."""
 
-    def __init__(self, dsn: str = None, conn=None):
-        self.dsn = dsn or os.getenv("DATABASE_URL")
+    def __init__(self, conn=None):
+        self.dsn = os.getenv("DATABASE_URL")
         if conn is not None:
             self.conn = conn
         else:
-            import psycopg2  # lazy import
-            self.conn = psycopg2.connect(self.dsn)
+            import psycopg  # lazy import
+            self.conn = psycopg.connect(self.dsn)
 
-    def get_last_published_time(self):
+    def get_feed_last_published_time(self, feed_id):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT MAX(published) FROM articles;")
+            cur.execute("SELECT MAX(published) FROM articles where feed_id=%s;", (feed_id,))
             row = cur.fetchone()
             if row and row[0]:
                 return row[0]
@@ -32,17 +32,18 @@ class DBSink(Sink):
 
     def upsert_article(self, article: dict) -> bool:
         sql = (
-            "INSERT INTO articles (id, title, url, author, published, tags, summary, content) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
+            "INSERT INTO articles (id, title, url, author, published, tags, summary, content, feed_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
             "ON CONFLICT (id) DO UPDATE SET "
             "title = EXCLUDED.title, url = EXCLUDED.url, author = EXCLUDED.author, "
             "published = EXCLUDED.published, tags = EXCLUDED.tags, summary = EXCLUDED.summary, "
-            "content = EXCLUDED.content;"
+            "content = EXCLUDED.content, "
+            "feed_id = EXCLUDED.feed_id;"
         )
         params = (
             article['id'], article.get('title'), article.get('url'), article.get('author'),
             article.get('published'), article.get('tags'), article.get('summary'),
-            article.get('content')
+            article.get('content'),article.get('feed_id')
         )
         try:
             with self.conn.cursor() as cur:
@@ -63,16 +64,15 @@ class InMemorySink(Sink):
     def __init__(self):
         self.articles = {}  # id -> article dict
 
-    def get_last_published_time(self):
+    def get_feed_last_published_time(self, feed_id):
         if not self.articles:
             return dateparser.parse("1970-01-01T00:00:00Z")
         max_published = max(
-            (a['published'] for a in self.articles.values() if a.get('published')),
+            (a['published'] for a in self.articles.values() if a.get('feed_id')==feed_id and a.get('published')),
             default=dateparser.parse("1970-01-01T00:00:00Z")
         )
         return max_published
 
     def upsert_article(self, article: dict) -> bool:
-        print("Upserting article:", article)
         self.articles[article['id']] = article
         return True

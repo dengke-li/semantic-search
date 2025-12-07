@@ -6,20 +6,25 @@ import feedparser
 from dateutil import parser as dateparser
 
 # Deterministic id from url (or GUID)
-def make_id(entry):
+def make_article_id(entry):
     guid = entry.get('id') or entry.get('guid') or entry.get('link')
     return hashlib.sha256(guid.encode('utf-8')).hexdigest()
+
+def make_feed_id(path):
+    return hashlib.sha256(path.encode('utf-8')).hexdigest()
 
 class Crawler:
     def __init__(self, url, path, sink):
         self.path = path
         self.url = url
         self.sink = sink
+        self.feed_id = make_feed_id(path)
 
     def download_feed(self):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
+        print("Download", self.url)
         r = requests.get(self.url, headers=headers)
         r.raise_for_status()
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -32,25 +37,26 @@ class Crawler:
         url = entry.get('link')
         author = entry.get('author')
 
-        tags = entry.get('tags')
+        tags = [tag.get('term', '') for tag in entry.get('tags')]
         summary = entry.get('summary')
-        content = entry.get('content')
-        id = make_id(entry)
+        content = entry.get('content')[0].get('value') if entry.get('content') else ''
+        id = make_article_id(entry)
 
         art = {
             'title': title,
             'url': url,
-            'title': title,
             'author': author,
             'published': published,
             'tags': tags,
             'summary': summary,
             'content': content,
             'id': id,
+            'feed_id': self.feed_id,
         }
         return art
 
     def extract(self, sink_watermark=None):
+        print(self.path)
         d = feedparser.parse(self.path)
         for entry in d.entries:
             try:
@@ -70,6 +76,7 @@ class Crawler:
     # Poll feeds incrementally
     def poll_once(self):
         self.download_feed()
-        last_published_time = self.sink.get_last_published_time()
+        last_published_time = self.sink.get_feed_last_published_time(self.feed_id)
+        print(f'last_published_time: {last_published_time}')
         arts = self.extract(last_published_time)
         self.ingest(arts)
