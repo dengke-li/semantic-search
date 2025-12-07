@@ -6,12 +6,18 @@ authors = [
     {name = "dengke-li",email = "linuslukia@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
+    "psycopg (>=3.3.2,<4.0.0)"
 ]
 
 [tool.poetry]
-packages = [{include = "ingestion", from = "src"}]
+packages = [{include = "ingest_etl"}]
+
+# Add this section for dev tools
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.0.2,<10.0.0"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
