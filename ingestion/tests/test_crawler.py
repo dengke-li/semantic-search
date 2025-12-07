@@ -20,7 +20,7 @@ SAMPLE_FEED = """<?xml version="1.0" encoding="UTF-8" ?>
 """
 
 
-def fake_get(url):
+def fake_get(url,headers=None):
     class R:
         def __init__(self, content):
             self.content = content
