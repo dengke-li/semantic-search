@@ -26,7 +26,7 @@ class DBSink(Sink):
             cur.execute("SELECT MAX(published) FROM articles where feed_id=%s;", (feed_id,))
             row = cur.fetchone()
             if row and row[0]:
-                return row[0]
+                return dateparser.parse(row[0])
             else:
                 return dateparser.parse("1970-01-01T00:00:00Z")
 

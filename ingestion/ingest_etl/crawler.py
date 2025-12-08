@@ -1,5 +1,6 @@
 import hashlib
 import os
+import uuid
 
 import requests
 import feedparser
@@ -8,7 +9,7 @@ from dateutil import parser as dateparser
 # Deterministic id from url (or GUID)
 def make_article_id(entry):
     guid = entry.get('id') or entry.get('guid') or entry.get('link')
-    return hashlib.sha256(guid.encode('utf-8')).hexdigest()
+    return uuid.uuid3(uuid.NAMESPACE_URL, guid)
 
 def make_feed_id(path):
     return hashlib.sha256(path.encode('utf-8')).hexdigest()
@@ -75,7 +76,7 @@ class Crawler:
 
     # Poll feeds incrementally
     def poll_once(self):
-        self.download_feed()
+        #self.download_feed()
         last_published_time = self.sink.get_feed_last_published_time(self.feed_id)
         print(f'last_published_time: {last_published_time}')
         arts = self.extract(last_published_time)
