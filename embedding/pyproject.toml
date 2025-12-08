@@ -1,0 +1,22 @@
+[project]
+name = "embedding"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "dengke-li",email = "linuslukia@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "psycopg (>=3.3.2,<4.0.0)",
+    "psycopg-binary (>=3.3.2,<4.0.0)",
+    "sentence-transformers (>=5.1.2,<6.0.0)",
+    "qdrant-client (>=1.16.1,<2.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "embedder", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS articles (
     tags TEXT[],
     summary TEXT,
     content TEXT,
-    feed_id TEXT
+    feed_id TEXT,
+    embedded_at TIMESTAMP
 );
