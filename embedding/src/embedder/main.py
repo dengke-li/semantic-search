@@ -32,6 +32,7 @@ class EmbeddingWorker:
                 "url": article.url,
                 "author": article.author,
                 "summary": article.summary,
+                "content": article.content,
             }
 
             self.qdrant_repo.upsert_embedding(article.id, vec, payload)

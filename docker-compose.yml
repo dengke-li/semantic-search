@@ -54,6 +54,22 @@ services:
       BATCH_SIZE: "50"
     restart: unless-stopped
 
+  embedding-service:
+    build: ./embedding-service
+    ports:
+      - "8081:8081"
+
+  backend:
+    build: ./backend
+    depends_on:
+      - qdrant
+      - embedding-service
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      EMBEDDING_SERVICE_URL: http://embedding-service:8081/embed
+    ports:
+      - "8000:8000"
+
 volumes:
   pgdata: {}
   qdrant_storage: {}
