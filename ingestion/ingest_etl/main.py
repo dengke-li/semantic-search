@@ -1,14 +1,13 @@
 import os
 import time
 
-from ingest_etl.crawler import Crawler
+from ingest_etl.crawler import Crawler, logger
 from ingest_etl.sink import DBSink, InMemorySink
-from ingest_etl.config import public_feeds, vsd_feeds
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-PUBLIC_FEEDS = os.getenv("PUBLIC_FEEDS", public_feeds).split(", ")
-VSD_FEEDS = os.getenv("VSD_FEEDS", vsd_feeds).split(", ")
+PUBLIC_FEEDS = os.getenv("PUBLIC_FEEDS").split(", ")
+VSD_FEEDS = os.getenv("VSD_FEEDS").split(", ")
 
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SEC", "30000"))
 
@@ -19,19 +18,17 @@ def main_loop():
     for site in site_feeds:
         feeds = site_feeds[site]
         for category_url in feeds:
-            print(category_url)
             category, url = tuple(category_url.split(' : '))
             path = f"data/{site}_{category}.xml"
             crawlers.append(
                 Crawler(url=url, path=path, sink=db_sink),
             )
     while True:
-        print('run crawlers')
         for c in crawlers:
             try:
                 c.poll_once()
             except Exception as e:
-                print("poll error for", c.url, e)
+                logger.error("poll error for", c.url, e)
         time.sleep(POLL_INTERVAL)
 
 if __name__ == '__main__':

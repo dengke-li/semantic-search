@@ -1,10 +1,13 @@
 import hashlib
 import os
 import uuid
+import logging
 
 import requests
 import feedparser
 from dateutil import parser as dateparser
+
+logger = logging.getLogger("ingestion-service")
 
 # Deterministic id from url (or GUID)
 def make_article_id(entry):
@@ -25,7 +28,7 @@ class Crawler:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        print("Download", self.url)
+        logger.info("Download article for ", self.url)
         r = requests.get(self.url, headers=headers)
         r.raise_for_status()
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -36,9 +39,9 @@ class Crawler:
         published = dateparser.parse(entry.published)
         title = entry.get('title')
         url = entry.get('link')
-        author = entry.get('author')
+        author = entry.get('author', '')
 
-        tags = [tag.get('term', '') for tag in entry.get('tags')]
+        #tags = [tag.get('term', '') for tag in entry.get('tags')]
         summary = entry.get('summary')
         content = entry.get('content')[0].get('value') if entry.get('content') else ''
         id = make_article_id(entry)
@@ -48,7 +51,6 @@ class Crawler:
             'url': url,
             'author': author,
             'published': published,
-            'tags': tags,
             'summary': summary,
             'content': content,
             'id': id,
@@ -57,7 +59,7 @@ class Crawler:
         return art
 
     def extract(self, sink_watermark=None):
-        print(self.path)
+        logger.info("Extract article from ", self.path)
         d = feedparser.parse(self.path)
         for entry in d.entries:
             try:
@@ -67,17 +69,16 @@ class Crawler:
                 norm = self._normalize_entry(entry)
                 yield norm
             except Exception as ee:
-                print('entry error', ee)
+                logger.error('entry error', ee)
 
     def ingest(self, arts):
         for art in arts:
-            print(art)
             ok = self.sink.upsert_article(art)
 
     # Poll feeds incrementally
     def poll_once(self):
-        #self.download_feed()
+        self.download_feed()
         last_published_time = self.sink.get_feed_last_published_time(self.feed_id)
-        print(f'last_published_time: {last_published_time}')
+        logger.info(f'last_published_time: {last_published_time}')
         arts = self.extract(last_published_time)
         self.ingest(arts)

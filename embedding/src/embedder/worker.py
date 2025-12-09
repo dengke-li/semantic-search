@@ -1,6 +1,7 @@
 import time
 import os
 from typing import List
+import logging
 
 from sentence_transformers import SentenceTransformer
 
@@ -8,6 +9,7 @@ from embedder.article_repo import PostgresArticleRepository, Article
 from embedder.vector_repo import QdrantArticleRepository
 
 
+logger = logging.getLogger("embedding-worker")
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SEC", "10"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50"))
 
@@ -49,13 +51,13 @@ class EmbeddingWorker:
         try:
             articles = article_repo.fetch_unembedded(limit=BATCH_SIZE)
             if not articles:
-                print("No pending articles...")
+                logger.info("No pending articles...")
                 return
             self.process_batch(articles, article_repo)
         finally:
             article_repo.close()
 
-        print(f"Processed {len(articles)} articles.")
+        logger.info(f"Processed {len(articles)} articles.")
 
     def run_forever(self):
         while True:
