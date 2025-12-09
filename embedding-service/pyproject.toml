@@ -1,0 +1,22 @@
+[project]
+name = "embedding-service"
+version = "0.1.0"
+description = "Async embedding API"
+authors = [
+    {name = "dengke-li",email = "linuslukia@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "sentence-transformers (>=5.1.2,<6.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "fastapi (>=0.124.0,<0.125.0)",
+    "uvicorn (>=0.38.0,<0.39.0)",
+]
+
+[tool.poetry]
+packages = [{include = "embedding_service", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
