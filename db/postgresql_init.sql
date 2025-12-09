@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS articles (
     url TEXT,
     author TEXT,
     published TIMESTAMP,
-    tags TEXT[],
     summary TEXT,
     content TEXT,
     feed_id TEXT,

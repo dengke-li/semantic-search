@@ -32,17 +32,17 @@ class DBSink(Sink):
 
     def upsert_article(self, article: dict) -> bool:
         sql = (
-            "INSERT INTO articles (id, title, url, author, published, tags, summary, content, feed_id) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            "INSERT INTO articles (id, title, url, author, published, summary, content, feed_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
             "ON CONFLICT (id) DO UPDATE SET "
             "title = EXCLUDED.title, url = EXCLUDED.url, author = EXCLUDED.author, "
-            "published = EXCLUDED.published, tags = EXCLUDED.tags, summary = EXCLUDED.summary, "
+            "published = EXCLUDED.published, summary = EXCLUDED.summary, "
             "content = EXCLUDED.content, "
             "feed_id = EXCLUDED.feed_id;"
         )
         params = (
             article['id'], article.get('title'), article.get('url'), article.get('author'),
-            article.get('published'), article.get('tags'), article.get('summary'),
+            article.get('published'), article.get('summary'),
             article.get('content'),article.get('feed_id')
         )
         try:
