@@ -2,6 +2,7 @@ import httpx
 
 from app.config import settings
 
+
 class EmbeddingClient:
     def __init__(self):
         self.url = settings.EMBEDDING_SERVICE_URL
@@ -12,5 +13,6 @@ class EmbeddingClient:
             response.raise_for_status()
             data = response.json()
             return data["embedding"]
+
 
 embedding_client = EmbeddingClient()

@@ -9,13 +9,16 @@ from dateutil import parser as dateparser
 
 logger = logging.getLogger("ingestion-service")
 
+
 # Deterministic id from url (or GUID)
 def make_article_id(entry):
-    guid = entry.get('id') or entry.get('guid') or entry.get('link')
+    guid = entry.get("id") or entry.get("guid") or entry.get("link")
     return uuid.uuid3(uuid.NAMESPACE_URL, guid)
 
+
 def make_feed_id(path):
-    return hashlib.sha256(path.encode('utf-8')).hexdigest()
+    return hashlib.sha256(path.encode("utf-8")).hexdigest()
+
 
 class Crawler:
     def __init__(self, url, path, sink):
@@ -37,24 +40,24 @@ class Crawler:
 
     def _normalize_entry(self, entry):
         published = dateparser.parse(entry.published)
-        title = entry.get('title')
-        url = entry.get('link')
-        author = entry.get('author', '')
+        title = entry.get("title")
+        url = entry.get("link")
+        author = entry.get("author", "")
 
-        #tags = [tag.get('term', '') for tag in entry.get('tags')]
-        summary = entry.get('summary')
-        content = entry.get('content')[0].get('value') if entry.get('content') else ''
+        # tags = [tag.get('term', '') for tag in entry.get('tags')]
+        summary = entry.get("summary")
+        content = entry.get("content")[0].get("value") if entry.get("content") else ""
         id = make_article_id(entry)
 
         art = {
-            'title': title,
-            'url': url,
-            'author': author,
-            'published': published,
-            'summary': summary,
-            'content': content,
-            'id': id,
-            'feed_id': self.feed_id,
+            "title": title,
+            "url": url,
+            "author": author,
+            "published": published,
+            "summary": summary,
+            "content": content,
+            "id": id,
+            "feed_id": self.feed_id,
         }
         return art
 
@@ -69,7 +72,7 @@ class Crawler:
                 norm = self._normalize_entry(entry)
                 yield norm
             except Exception as ee:
-                logger.error('entry error', ee)
+                logger.error("entry error", ee)
 
     def ingest(self, arts):
         for art in arts:
@@ -79,6 +82,6 @@ class Crawler:
     def poll_once(self):
         self.download_feed()
         last_published_time = self.sink.get_feed_last_published_time(self.feed_id)
-        logger.info(f'last_published_time: {last_published_time}')
+        logger.info(f"last_published_time: {last_published_time}")
         arts = self.extract(last_published_time)
         self.ingest(arts)

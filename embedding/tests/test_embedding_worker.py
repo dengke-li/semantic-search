@@ -27,7 +27,9 @@ def test_process_batch_calls_upsert_and_mark():
     # repo uses the original misspelled method name in code
     article_repo.mark_embbeded = MagicMock()
 
-    worker = EmbeddingWorker(model=model, qdrant_repo=qdrant, article_repo_factory=lambda: article_repo)
+    worker = EmbeddingWorker(
+        model=model, qdrant_repo=qdrant, article_repo_factory=lambda: article_repo
+    )
 
     batch = [make_article("1"), make_article("2")]
 

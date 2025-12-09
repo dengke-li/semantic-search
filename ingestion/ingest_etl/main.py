@@ -11,14 +11,15 @@ VSD_FEEDS = os.getenv("VSD_FEEDS").split(", ")
 
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SEC", "30000"))
 
+
 def main_loop():
-    db_sink = DBSink() #InMemorySink() #
-    site_feeds = {'vsd': VSD_FEEDS, 'public': PUBLIC_FEEDS}
+    db_sink = DBSink()  # InMemorySink() #
+    site_feeds = {"vsd": VSD_FEEDS, "public": PUBLIC_FEEDS}
     crawlers = []
     for site in site_feeds:
         feeds = site_feeds[site]
         for category_url in feeds:
-            category, url = tuple(category_url.split(' : '))
+            category, url = tuple(category_url.split(" : "))
             path = f"data/{site}_{category}.xml"
             crawlers.append(
                 Crawler(url=url, path=path, sink=db_sink),
@@ -31,5 +32,6 @@ def main_loop():
                 logger.error("poll error for", c.url, e)
         time.sleep(POLL_INTERVAL)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main_loop()

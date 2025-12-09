@@ -3,6 +3,7 @@ import os
 
 from pydantic import BaseModel
 
+
 class Article(BaseModel):
     id: str
     title: str
@@ -10,6 +11,7 @@ class Article(BaseModel):
     author: str
     summary: str
     content: str
+
 
 class PostgresArticleRepository:
     def __init__(self):
@@ -27,9 +29,12 @@ class PostgresArticleRepository:
         with self.conn.cursor() as cur:
             cur.execute(sql, (limit,))
             rows = cur.fetchall()
-        return [Article(**dict(zip(
-            ["id", "title", "url", "author", "summary", "content"], r)
-        )) for r in rows]
+        return [
+            Article(
+                **dict(zip(["id", "title", "url", "author", "summary", "content"], r))
+            )
+            for r in rows
+        ]
 
     def mark_embbeded(self, article_id: str):
         sql = """

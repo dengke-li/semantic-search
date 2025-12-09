@@ -15,12 +15,7 @@ BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50"))
 
 
 class EmbeddingWorker:
-    def __init__(
-            self,
-            model=None,
-            qdrant_repo=None,
-            article_repo_factory=None
-    ):
+    def __init__(self, model=None, qdrant_repo=None, article_repo_factory=None):
         # Load model ONCE at startup
         # allow injecting model and repos for testing; lazy default to real ones
         self.model = model
@@ -71,12 +66,10 @@ def run():
             "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
         ),
         qdrant_repo=QdrantArticleRepository(),
-        article_repo_factory=(lambda: PostgresArticleRepository())
+        article_repo_factory=(lambda: PostgresArticleRepository()),
     )
     worker.run_forever()
 
 
 if __name__ == "__main__":
     run()
-
-

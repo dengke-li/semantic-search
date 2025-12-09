@@ -2,13 +2,16 @@ import os
 
 from dateutil import parser as dateparser
 
+
 class Sink:
     """Abstract sink interface for articles."""
+
     def get_feed_last_published_time(self, id):
         raise NotImplementedError
 
     def upsert_article(self, article: dict) -> bool:
         raise NotImplementedError
+
 
 class DBSink(Sink):
     """Database sink. Lazy-imports psycopg so tests can avoid DB dependency."""
@@ -19,11 +22,14 @@ class DBSink(Sink):
             self.conn = conn
         else:
             import psycopg  # lazy import
+
             self.conn = psycopg.connect(self.dsn)
 
     def get_feed_last_published_time(self, feed_id):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT MAX(published) FROM articles where feed_id=%s;", (feed_id,))
+            cur.execute(
+                "SELECT MAX(published) FROM articles where feed_id=%s;", (feed_id,)
+            )
             row = cur.fetchone()
             if row and row[0]:
                 return dateparser.parse(row[0])
@@ -41,9 +47,14 @@ class DBSink(Sink):
             "feed_id = EXCLUDED.feed_id;"
         )
         params = (
-            article['id'], article.get('title'), article.get('url'), article.get('author'),
-            article.get('published'), article.get('summary'),
-            article.get('content'),article.get('feed_id')
+            article["id"],
+            article.get("title"),
+            article.get("url"),
+            article.get("author"),
+            article.get("published"),
+            article.get("summary"),
+            article.get("content"),
+            article.get("feed_id"),
         )
         try:
             with self.conn.cursor() as cur:
@@ -61,6 +72,7 @@ class DBSink(Sink):
 
 class InMemorySink(Sink):
     """In-memory sink used for unit tests."""
+
     def __init__(self):
         self.articles = {}  # id -> article dict
 
@@ -68,11 +80,15 @@ class InMemorySink(Sink):
         if not self.articles:
             return dateparser.parse("1970-01-01T00:00:00Z")
         max_published = max(
-            (a['published'] for a in self.articles.values() if a.get('feed_id')==feed_id and a.get('published')),
-            default=dateparser.parse("1970-01-01T00:00:00Z")
+            (
+                a["published"]
+                for a in self.articles.values()
+                if a.get("feed_id") == feed_id and a.get("published")
+            ),
+            default=dateparser.parse("1970-01-01T00:00:00Z"),
         )
         return max_published
 
     def upsert_article(self, article: dict) -> bool:
-        self.articles[article['id']] = article
+        self.articles[article["id"]] = article
         return True

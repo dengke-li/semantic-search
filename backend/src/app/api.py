@@ -10,12 +10,15 @@ from app.vector_client import vector_search
 logger = logging.getLogger("backend-service")
 app = FastAPI(title="Semantic search", version="1.0")
 
+
 class SearchInput(BaseModel):
     query: str
     limit: int = 5
 
+
 class SearchResultItem(BaseModel):
     results: list[dict]
+
 
 @app.post("/search", response_model=SearchResultItem)
 async def semantic_search(payload: SearchInput):
@@ -33,13 +36,12 @@ async def semantic_search(payload: SearchInput):
     for h in hits:
         points = h[1]
         for point in points:
-            results.append({
-                "score": point.score,
-                "payload": point.payload
-            })
+            results.append({"score": point.score, "payload": point.payload})
 
     return SearchResultItem(results=results)
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
