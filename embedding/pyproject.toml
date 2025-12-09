@@ -11,11 +11,18 @@ dependencies = [
     "psycopg (>=3.3.2,<4.0.0)",
     "psycopg-binary (>=3.3.2,<4.0.0)",
     "sentence-transformers (>=5.1.2,<6.0.0)",
-    "qdrant-client (>=1.16.1,<2.0.0)"
+    "qdrant-client (>=1.16.1,<2.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)"
 ]
 
 [tool.poetry]
 packages = [{include = "embedder", from = "src"}]
+
+# Add this section for dev tools
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.0.2,<10.0.0"
+numpy = "^2.3.5"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

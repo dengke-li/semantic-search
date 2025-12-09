@@ -1,9 +1,10 @@
 import time
 import os
+from typing import List
 
 from sentence_transformers import SentenceTransformer
 
-from embedder.article_repo import PostgresArticleRepository
+from embedder.article_repo import PostgresArticleRepository, Article
 from embedder.vector_repo import QdrantArticleRepository
 
 
@@ -12,14 +13,19 @@ BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50"))
 
 
 class EmbeddingWorker:
-    def __init__(self):
+    def __init__(
+            self,
+            model=None,
+            qdrant_repo=None,
+            article_repo_factory=None
+    ):
         # Load model ONCE at startup
-        print("Loading paraphrase-multilingual-mpnet-base-v2 model")
-        self.model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
+        # allow injecting model and repos for testing; lazy default to real ones
+        self.model = model
+        self.qdrant_repo = qdrant_repo
+        self.article_repo_factory = article_repo_factory
 
-        self.qdrant_repo = QdrantArticleRepository()
-
-    def process_batch(self, batch: list, article_repo):
+    def process_batch(self, batch: List[Article], article_repo):
         if not batch:
             return
 
@@ -39,14 +45,15 @@ class EmbeddingWorker:
             article_repo.mark_embbeded(article.id)
 
     def run_once(self):
-        article_repo = PostgresArticleRepository()
-        articles = article_repo.fetch_unembedded(limit=BATCH_SIZE)
-        if not articles:
-            print("No pending articles...")
-            return
-
-        self.process_batch(articles, article_repo)
-        article_repo.close()
+        article_repo = self.article_repo_factory()
+        try:
+            articles = article_repo.fetch_unembedded(limit=BATCH_SIZE)
+            if not articles:
+                print("No pending articles...")
+                return
+            self.process_batch(articles, article_repo)
+        finally:
+            article_repo.close()
 
         print(f"Processed {len(articles)} articles.")
 
@@ -57,7 +64,13 @@ class EmbeddingWorker:
 
 
 def run():
-    worker = EmbeddingWorker()
+    worker = EmbeddingWorker(
+        model=SentenceTransformer(
+            "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        ),
+        qdrant_repo=QdrantArticleRepository(),
+        article_repo_factory=(lambda: PostgresArticleRepository())
+    )
     worker.run_forever()
 
 

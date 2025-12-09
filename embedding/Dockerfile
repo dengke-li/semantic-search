@@ -6,4 +6,4 @@ poetry config virtualenvs.create false
 COPY . /app
 RUN poetry install
 
-CMD ["poetry", "run", "python", "src/embedder/main.py"]
+CMD ["poetry", "run", "python", "src/embedder/worker.py"]
