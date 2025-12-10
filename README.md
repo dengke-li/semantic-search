@@ -11,8 +11,16 @@ relevant articles from the vector db.
 
 ## start all services
 docker-compose up --build
-Wait all service container up, and watch http://localhost:6333/dashboard#/collections/articles#points
-to see if vector db collection is created.
+Wait all above service container up, watch the article download progress 
+and the embedding progress to vectorDB until no pending articles left shown on the log,
+and vector db article can be found in http://localhost:6333/dashboard#/collections/articles#points
+
+## Example input query
+POST /search
+{
+  "query": "Trouver les top eletromenager chez lidle",
+  "limit": 6
+}
 
 ## clean all data and shut down services
 docker-compose down -v
