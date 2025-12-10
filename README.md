@@ -11,6 +11,8 @@ relevant articles from the vector db.
 
 ## start all services
 docker-compose up --build
+Wait all service container up, and watch http://localhost:6333/dashboard#/collections/articles#points
+to see if vector db collection is created.
 
 ## clean all data and shut down services
 docker-compose down -v
