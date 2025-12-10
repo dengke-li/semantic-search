@@ -11,12 +11,16 @@ relevant articles from the vector db.
 
 ## start all services
 docker-compose up --build
-Wait all above service container up, watch the article download progress 
+
+Wait all above service container up, 
+watch the article download progress 
 and the embedding progress to vectorDB until no pending articles left shown on the log,
-and vector db article can be found in http://localhost:6333/dashboard#/collections/articles#points
+and vector db article can be found in 
+http://localhost:6333/dashboard#/collections/articles#points
 
 ## Example input query
 POST /search
+
 {
   "query": "Trouver les top eletromenager chez lidle",
   "limit": 6
