@@ -7,6 +7,7 @@ from embedding_service.model import embedding_model
 
 
 logger = logging.getLogger("embedding-service")
+logger.setLevel(logging.INFO)
 app = FastAPI(title="Embedding service", version="1.0")
 
 

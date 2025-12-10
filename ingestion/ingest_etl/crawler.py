@@ -2,13 +2,19 @@ import hashlib
 import os
 import uuid
 import logging
+import sys
 
 import requests
 import feedparser
 from dateutil import parser as dateparser
 
-logger = logging.getLogger("ingestion-service")
-
+def get_logger():
+    logger = logging.getLogger("ingestion-service")
+    handler = logging.StreamHandler(sys.stdout)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return logger
+logger = get_logger()
 
 # Deterministic id from url (or GUID)
 def make_article_id(entry):
@@ -31,7 +37,7 @@ class Crawler:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        logger.info("Download article for ", self.url)
+        logger.info(f"Download article for {self.url}")
         r = requests.get(self.url, headers=headers)
         r.raise_for_status()
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -39,7 +45,7 @@ class Crawler:
             f.write(r.content)
 
     def _normalize_entry(self, entry):
-        published = dateparser.parse(entry.published)
+        published = dateparser.parse(entry.published, ignoretz=True)
         title = entry.get("title")
         url = entry.get("link")
         author = entry.get("author", "")
@@ -62,11 +68,11 @@ class Crawler:
         return art
 
     def extract(self, sink_watermark=None):
-        logger.info("Extract article from ", self.path)
+        logger.info(f"Extract article from {self.path}")
         d = feedparser.parse(self.path)
         for entry in d.entries:
             try:
-                published = dateparser.parse(entry.published)
+                published = dateparser.parse(entry.published, ignoretz=True)
                 if published and sink_watermark and published < sink_watermark:
                     continue
                 norm = self._normalize_entry(entry)
@@ -81,7 +87,8 @@ class Crawler:
     # Poll feeds incrementally
     def poll_once(self):
         self.download_feed()
+        print(f"check for feed {self.feed_id} last_published_time")
         last_published_time = self.sink.get_feed_last_published_time(self.feed_id)
-        logger.info(f"last_published_time: {last_published_time}")
+        logger.info(f"last_published_time: {last_published_time} for feed {self.feed_id}")
         arts = self.extract(last_published_time)
         self.ingest(arts)

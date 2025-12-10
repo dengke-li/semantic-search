@@ -32,9 +32,9 @@ class DBSink(Sink):
             )
             row = cur.fetchone()
             if row and row[0]:
-                return dateparser.parse(row[0])
+                return row[0]
             else:
-                return dateparser.parse("1970-01-01T00:00:00Z")
+                return dateparser.parse("1970-01-01T00:00:00")
 
     def upsert_article(self, article: dict) -> bool:
         sql = (
@@ -78,14 +78,14 @@ class InMemorySink(Sink):
 
     def get_feed_last_published_time(self, feed_id):
         if not self.articles:
-            return dateparser.parse("1970-01-01T00:00:00Z")
+            return dateparser.parse("1970-01-01T00:00:00")
         max_published = max(
             (
                 a["published"]
                 for a in self.articles.values()
                 if a.get("feed_id") == feed_id and a.get("published")
             ),
-            default=dateparser.parse("1970-01-01T00:00:00Z"),
+            default=dateparser.parse("1970-01-01T00:00:00"),
         )
         return max_published
 

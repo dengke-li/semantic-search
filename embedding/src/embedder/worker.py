@@ -1,7 +1,7 @@
 import time
 import os
 from typing import List
-import logging
+import logging, sys
 
 from sentence_transformers import SentenceTransformer
 
@@ -9,7 +9,13 @@ from embedder.article_repo import PostgresArticleRepository, Article
 from embedder.vector_repo import QdrantArticleRepository
 
 
-logger = logging.getLogger("embedding-worker")
+def get_logger():
+    logger = logging.getLogger("embeeding-worker")
+    handler = logging.StreamHandler(sys.stdout)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return logger
+logger = get_logger()
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SEC", "10"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50"))
 

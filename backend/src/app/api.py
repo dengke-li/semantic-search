@@ -8,6 +8,7 @@ from app.vector_client import vector_search
 
 
 logger = logging.getLogger("backend-service")
+logger.setLevel(logging.INFO)
 app = FastAPI(title="Semantic search", version="1.0")
 
 
@@ -27,10 +28,12 @@ async def semantic_search(payload: SearchInput):
         query_vec = await embedding_client.embed(payload.query)
     except Exception as e:
         logger.error(f"Embedding error: {e}")
+        return SearchResultItem(results=[])
     try:
         hits = await vector_search(query_vec, payload.limit)
     except Exception as e:
         logger.error(f"Vector search error: {e}")
+        return SearchResultItem(results=[])
 
     results = []
     for h in hits:

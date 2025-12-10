@@ -29,7 +29,7 @@ def main_loop():
             try:
                 c.poll_once()
             except Exception as e:
-                logger.error("poll error for", c.url, e)
+                logger.error(f"poll error for {c.url}: {e}")
         time.sleep(POLL_INTERVAL)
 
 
