@@ -26,13 +26,9 @@ async def semantic_search(payload: SearchInput):
     logger.info(f"Received search request: {payload.query} with limit {payload.limit}")
     try:
         query_vec = await embedding_client.embed(payload.query)
-    except Exception as e:
-        logger.error(f"Embedding error: {e}")
-        return SearchResultItem(results=[])
-    try:
         hits = await vector_search(query_vec, payload.limit)
     except Exception as e:
-        logger.error(f"Vector search error: {e}")
+        logger.error(f"embedding or search error: {e}")
         return SearchResultItem(results=[])
 
     results = []
