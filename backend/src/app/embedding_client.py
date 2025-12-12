@@ -13,7 +13,6 @@ class EmbeddingClient:
     async def embed(self, text: str):
         async with httpx.AsyncClient(timeout=20) as client:
             try:
-                print('embedding post')
                 response = await client.post(self.url, json={"text": text})
                 response.raise_for_status()
             except httpx.HTTPStatusError as exc:

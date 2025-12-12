@@ -12,7 +12,6 @@ qdrant = AsyncQdrantClient(url=settings.QDRANT_URL)
 @retry_policy
 async def vector_search(query_vector, limit=5):
     try:
-        print('search query')
         response = await qdrant.query_points(
             collection_name=settings.QDRANT_COLLECTION, query=query_vector, limit=limit
         )
